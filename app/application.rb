@@ -1,30 +1,53 @@
+
 class Application
 
-  @@items = ["Apples","Carrots","Pears"]
+  @@items = [ "Apples", "Carrots", "Pears" ]
+  @@cart = [  ]
 
-  def call(env)
-    resp = Rack::Response.new
-    req = Rack::Request.new(env)
-
-    if req.path.match(/items/)
-      @@items.each do |item|
-        resp.write "#{item}\n"
+  def call( env )
+    response = Rack::Response.new
+    request = Rack::Request.new( env )
+    if request.path.match( /items/ )
+      @@items.each do | item |
+        response.write "#{ item }\n"
       end
-    elsif req.path.match(/search/)
-      search_term = req.params["q"]
-      resp.write handle_search(search_term)
+    elsif request.path.match( /search/ )
+      search_term = request.params[ "q" ]
+      response.write handle_search( search_term )
+    elsif request.path.match( /cart/ )
+      response.write display_cart
+    elsif request.path.match( /add/ )
+      item_to_search_for = request.params[ "item" ]
+      response.write add_to_cart( item_to_search_for )
     else
-      resp.write "Path Not Found"
+      response.write "Path Not Found"
     end
-
-    resp.finish
+    response.finish
   end
 
-  def handle_search(search_term)
-    if @@items.include?(search_term)
-      return "#{search_term} is one of our items"
+  def handle_search( search_term )
+    if @@items.include?( search_term )
+      return "#{ search_term } is one of our items"
     else
-      return "Couldn't find #{search_term}"
+      return "Couldn't find #{ search_term }"
     end
   end
+
+  def display_cart
+    if @@cart.empty?
+      return "Your cart is empty"
+    else
+      return @@cart.inject(""){ | list, item | list + "#{ item }\n" }
+    end
+  end
+
+  def add_to_cart( item )
+    if @@items.include?( item )
+      @@cart << item
+      return "added #{ item }"
+    else
+      return "We don't have that item"
+    end
+  end
+  
 end
